@@ -2,7 +2,7 @@ import { StyleSheet, Text, View, Alert, ScrollView, Pressable, TextInput, Image 
 import * as Location from 'expo-location';
 import * as LocationGeocoding from 'expo-location';
 import React, { useEffect, useState } from 'react';
-import { Octicons, AntDesign  } from '@expo/vector-icons';
+import { Octicons, AntDesign, Ionicons } from '@expo/vector-icons';
 import Carousel from '../../components/Carousel';
 import Categories from '../../components/Categories';
 
@@ -53,14 +53,41 @@ const Index = () => {
     },
   ];
 
+  const items = [
+    {
+      id: "0",
+      name: "Offers",
+      description: "Upto 50% off",
+      image: "https://cdn-icons-png.flaticon.com/128/9356/9356378.png",
+    },
+    {
+      id: "1",
+      name: "Legends",
+      description: "Across Turkey",
+      image: "https://cdn-icons-png.flaticon.com/128/8302/8302686.png",
+    },
+    {
+      id: "2",
+      name: "Gourmet",
+      description: "Selections",
+      image: "https://cdn-icons-png.flaticon.com/128/1065/1065715.png",
+    },
+    {
+      id: "3",
+      name: "Healthy",
+      description: "Curated dishes",
+      image: "https://cdn-icons-png.flaticon.com/128/415/415744.png",
+    },
+  ];
+
   useEffect(() => {
     const fetchData = async () => {
-        await CheckLocationPermission();
+      await CheckLocationPermission();
       await CheckIfLocationEnabled();
       await GetCurrentLocation();
     };
     fetchData();
-  
+
   }, []);
 
   const CheckIfLocationEnabled = async () => {
@@ -135,56 +162,65 @@ const Index = () => {
   console.log('Adresim', displayCurrentAddress);
 
   return (
-    <ScrollView style={{flex:1, backgroundColor: "#f8f8f8"}}>
-      <View style={{ flexDirection:"row", alignItems:"center", gap: 12, padding: 10 }}>
+    <ScrollView style={{ flex: 1, backgroundColor: "#f8f8f8" }}>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 12, padding: 10 }}>
         <Octicons name="location" size={24} color="#E52B50" />
-        <View style={{flex: 1}}>
-            <Text style={{fontSize:15, fontWeight:"500"}}>Deliver To</Text>
-            <Text style={{color: "gray", fontSize:16, marginTop: 3}}>{displayCurrentAddress}</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 15, fontWeight: "500" }}>Deliver To</Text>
+          <Text style={{ color: "gray", fontSize: 16, marginTop: 3 }}>{displayCurrentAddress}</Text>
         </View>
         <View>
-            <Pressable style={{backgroundColor: '#6CB4EE', height:40, width: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 20}}>
-            <Text>S</Text>
-            </Pressable>
+          <Pressable style={{ backgroundColor: '#6CB4EE', height: 40, width: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 20 }}>
+            <Text>O</Text>
+          </Pressable>
         </View>
       </View>
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: "#C0C0C0", paddingHorizontal:10, paddingVertical:8, borderRadius: 11, marginTop:10, marginHorizontal: 10}}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", borderWidth: 1, borderColor: "#C0C0C0", paddingHorizontal: 10, paddingVertical: 8, borderRadius: 11, marginTop: 10, marginHorizontal: 10 }}>
         <TextInput placeholder='Search for food, hotels' style={{}} />
         <AntDesign name="search1" size={24} color="black" />
       </View>
       <View>
         <Carousel />
       </View>
-
-
-
-
-
-
-
       <View>
         <Categories />
       </View>
-
-
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 15 }}>
+        {recommended?.map((item, index) => (
+          <View key={index} style={{ backgroundColor: "white", flexDirection: "row", margin: 10, borderRadius: 10 }}>
+            <View>
+              <Image
+                source={{ uri: item?.image }}
+                style={{
+                  width: 100,
+                  height: 100,
+                  resizeMode: "cover",
+                  borderTopLeftRadius: 8,
+                  borderBottomLeftRadius: 7
+                }}
+              />
+            </View>
+            <View style={{ padding: 10, flexDirection: "column" }}>
+              <Text style={{ fontSize: 15, fontWeight: "500" }}>{item?.name}</Text>
+              <Text style={{ flex: 1, marginTop: 3, color: "gray", fontWeight: "500" }}>{item?.type}</Text>
+              <View style={{ flexDirection: "row", alignItems: "center", gap: 3 }}>
+                <Ionicons name="ios-time" size={24} color="green" />
+                <Text>{item?.time} mins</Text>
+              </View>
+            </View>
+          </View>
+        ))}
+      </ScrollView>
+      <Text style={{ textAlign: "center", marginTop: 15, letterSpacing: 4, marginBottom: 5, color: "gray" }}>EXPLORE</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-  {recommended?.map((item, index) => (
-    <View key={index} style={{backgroundColor: "white", flexDirection: "row", margin:  10, borderRadius: 10}}>
-      <View>
-        <Image
-          source={{ uri: item?.image }}
-          style={{
-            width: 100,
-            height: 100,
-            resizeMode: "cover",
-            borderRadius: 8,
-          }}
-        />
-      </View>
+  {items?.map((item, index) => (
+    <View key={index} style={{ width: 90, borderColor: "#E0E0E0", borderWidth: 1, paddingVertical: 5, paddingHorizontal: 1, borderRadius: 5, marginLeft:10, marginVertical:10, alignItems: "center", justifyContent: "center", backgroundColor:"white" }}>
+      <Image source={{ uri: item?.image }} style={{ width: 50, height: 50, }} />
+      <Text style={{fontSize: 13, fontWeight:"500", marginTop:6}}>{item?.name}</Text>
+      <Text style={{fontSize: 12, color:"gray", marginTop:3}}>{item?.description}</Text>
     </View>
   ))}
 </ScrollView>
-
 
     </ScrollView>
   );
@@ -193,4 +229,4 @@ const Index = () => {
 export default Index;
 
 const styles = StyleSheet.create({});
-  
+
