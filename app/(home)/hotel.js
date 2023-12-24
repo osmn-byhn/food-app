@@ -1,9 +1,13 @@
-import { ScrollView, StyleSheet, Text, Touchable, View, Pressable, Image } from 'react-native'
-import React from 'react'
+import { ScrollView, StyleSheet, Text, Touchable, View, Pressable, Image, Animated } from 'react-native'
+import React, { useRef, useState } from 'react'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import FoodItem from '../../components/FoodItem';
+import { useDispatch } from 'react-redux';
+import { cleanCart } from '../../redux/CartReducer';
+import Modal from "react-native-modal";
 
 import { Ionicons, Feather, Entypo, AntDesign  } from '@expo/vector-icons';
+import { useSelector } from 'react-redux';
 
 const hotel = () => {
     const params = useLocalSearchParams();
@@ -144,48 +148,143 @@ const hotel = () => {
         ],
       },
     ];
-  
+    const dispatch = useDispatch();
+    const cart = useSelector((state) => state.cart.cart);
+    const scrollViewRef = useRef(null)
+    const scrollAnim = useRef(new Animated.Value(0)).current;
+    const ITEM_HEIGHT = 1000;
+    const scrollToCategory = (index) => {
+      const yOffset = index * ITEM_HEIGHT
+      Animated.timing(scrollAnim, {
+        toValue: yOffset,
+        duration: 500,
+        useNativeDriver: true,
+      }).start();
+      scrollViewRef.current.scrollTo({ y: yOffset, animated: true})
+    }
+
+    const [ modalVisible, setModalVisible ] = useState(false)
+
 
   return (
-    <ScrollView style={{backgroundColor: "white"}}>
-      <View style={{flexDirection:"row", backgroundColor: "white", justifyContent: "space-between", alignItems:"center", paddingTop:20}}>
-        <Pressable style={{padding:5}} onPress={()=> router.push({
-      pathname: "/"})}>
-            <Ionicons name="arrow-back" size={25} color="black" />
-        </Pressable>
-        <View style={{flexDirection:"row", alignItems:"center", paddingHorizontal:14, gap:10}}>
-            <Pressable >
-                <Feather name="camera" size={24} color="black" />
-            </Pressable>
-            <Pressable >
-                <Ionicons name="bookmark-outline" size={24} color="black" />
-            </Pressable>
-            <Pressable >
-                <Entypo name="share" size={24} color="black" />
-            </Pressable>
+    <>
+      <ScrollView ref={scrollViewRef} style={{backgroundColor: "white"}}>
+        <View style={{flexDirection:"row", backgroundColor: "white", justifyContent: "space-between", alignItems:"center", paddingTop:20}}>
+          <Pressable style={{padding:5}} onPress={()=> {
+            router.push({pathname: "/"});
+            dispatch(cleanCart());
+            }}>
+              <Ionicons name="arrow-back" size={25} color="black" />
+          </Pressable>
+          <View style={{flexDirection:"row", alignItems:"center", paddingHorizontal:14, gap:10}}>
+              <Pressable >
+                  <Feather name="camera" size={24} color="black" />
+              </Pressable>
+              <Pressable >
+                  <Ionicons name="bookmark-outline" size={24} color="black" />
+              </Pressable>
+              <Pressable >
+                  <Entypo name="share" size={24} color="black" />
+              </Pressable>
+          </View>
         </View>
-      </View>
-      <View style={{ justifyContent: "center", alignItems: "center", marginVertical:12}}>
-        <Image source={{uri:params?.featured_image}} style={{width: "95%", aspectRatio: 6 / 4, borderRadius: 10, marginBottom:12, marginRight: 5 }}/>
+        <View style={{ justifyContent: "center", alignItems: "center", marginVertical:12}}>
+          <Image source={{uri:params?.featured_image}} style={{width: "95%", aspectRatio: 6 / 4, borderRadius: 10, marginBottom:12, marginRight: 5 }}/>
 
-        <Text style={{fontSize:20, fontWeight:"bold"}}>{params?.name}</Text>
-        <Text style={{marginTop:5, fontWeight:"500", color: "gray", fontSize:15}}>Fast Food - Traditional Food</Text>
-        <View style={{flexDirection:"row", alignItems:"center",gap: 4, marginTop:10}}>
-            <View style={{flexDirection:"row", alignItems:"center", backgroundColor:"#006A4E", borderRadius:4, paddingHorizontal:4, paddingVertical: 5,marginRight:5 }}>
-                <Text style={{color:"white", textAlign: "center", marginRight:5 ,fontSize: 17, fontWeight: "bold"}}>{params?.aggregate_rating}</Text>
-                <AntDesign name="star" size={17} color="white" />
+          <Text style={{fontSize:20, fontWeight:"bold"}}>{params?.name}</Text>
+          <Text style={{marginTop:5, fontWeight:"500", color: "gray", fontSize:15}}>Fast Food - Traditional Food</Text>
+          <View style={{flexDirection:"row", alignItems:"center",gap: 4, marginTop:10}}>
+              <View style={{flexDirection:"row", alignItems:"center", backgroundColor:"#006A4E", borderRadius:4, paddingHorizontal:4, paddingVertical: 5,marginRight:5 }}>
+                  <Text style={{color:"white", textAlign: "center", marginRight:5 ,fontSize: 17, fontWeight: "bold"}}>{params?.aggregate_rating}</Text>
+                  <AntDesign name="star" size={17} color="white" />
+              </View>
+              <Text style={{fontSize: 14, fontWeight: "500", marginLeft: 5}}>3.2K Ratings</Text>
+          </View>
+          <View>
+            <Text style={{justifyContent:"center", alignItems:"center", backgroundColor: "#d0f0c0", borderRadius:20, paddingHorizontal:20, paddingVertical:5, marginTop:12}}>{params?.adress}</Text>
+          </View>
+        </View>
+        {menu?.map((item, index) => (
+          <FoodItem key={index} item={item}/>
+        ))}
+
+      </ScrollView>
+
+      <View style={{flexDirection:"row", backgroundColor: "white"}}>
+          {menu?.map((item, index) => (
+            <Pressable key={index} onPress={() => scrollToCategory(index)} style={{paddingHorizontal: 7, paddingVertical: 5, marginVertical: 10, marginHorizontal: 10, alignItems: "center", borderRadius:7, justifyContent:"center", borderColor:"#181818", borderWidth: 1}} >
+              <Text>{item?.name}</Text>
+            </Pressable>
+          ))}
+      </View>
+
+      <Pressable onPress={() => setModalVisible(!modalVisible)} style={{width: 60, height:60, borderRadius: 30, justifyContent: "center", alignItems: "center", position: "absolute", right: 25, backgroundColor: "black", bottom: cart?.length > 0 ? 60 : 35}}>
+        <Ionicons style={{textAlign:"center"}} name="md-fast-food-outline" size={24} color="white" />
+        <Text style={{textAlign: "center", color: "white", fontWeight: "500", fontSize: 11, marginTop:3}}>MENU</Text>
+      </Pressable>
+
+      <Modal
+        isVisible={modalVisible}
+        onBackdropPress={() => setModalVisible(!modalVisible)}
+      >
+        <View
+          style={{
+            height: 190,
+            width: 250,
+            backgroundColor: "black",
+            position: "absolute",
+            bottom: 35,
+            right: 10,
+            borderRadius: 7,
+          }}
+        >
+          {menu?.map((item, index) => (
+            <View
+              style={{
+                padding: 10,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text
+                style={{ color: "#D0D0D0", fontWeight: "600", fontSize: 18 }}
+              >
+                {item?.name}
+              </Text>
+              <Text
+                style={{ color: "#D0D0D0", fontWeight: "600", fontSize: 18 }}
+              >
+                {item?.items?.length}
+              </Text>
             </View>
-            <Text style={{fontSize: 14, fontWeight: "500", marginLeft: 5}}>3.2K Ratings</Text>
+          ))}
+          <View style={{ justifyContent: "center", alignItems: "center" }}>
+            <Image
+              style={{ width: 120, height: 70, resizeMode: "contain" }}
+              source={{
+                uri: "https://res.cloudinary.com/swiggy/image/upload/fl_lossy,f_auto,q_auto,w_284/Logo_f5xzza",
+              }}
+            />
+          </View>
         </View>
-        <View>
-          <Text style={{justifyContent:"center", alignItems:"center", backgroundColor: "#d0f0c0", borderRadius:20, paddingHorizontal:20, paddingVertical:5, marginTop:12}}>{params?.adress}</Text>
-        </View>
-      </View>
-      {menu?.map((item, index) => (
-        <FoodItem key={index} item={item}/>
-      ))}
+      </Modal>
 
-    </ScrollView>
+      {cart?.length > 0 && (
+        <Pressable style={{backgroundColor:"#fd5c63", paddingHorizontal:10, paddingVertical: 10}} onPress={() => {
+          router.push({
+            pathname: "/cart",
+            params: {
+              name: params.name,
+            }
+          })
+        }}>
+          <Text style={{textAlign: "center", color:"white", fontSize:20, fontWeight: "900"}}>{cart?.length} item added</Text>
+        </Pressable>
+      )}
+
+      
+    </>
   )
 }
 
